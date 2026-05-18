@@ -51,12 +51,17 @@ public abstract class CIT {
         this.pack = pack;
         this.propertiesIdentifier = identifier;
         try {
-            for (String itemId : (properties.getProperty("items", properties.getProperty("matchItems", " "))).split(" "))
+            for (String itemId : properties.getProperty("items", properties.getProperty("matchItems", "")).trim().split("\\s+"))
                 if (!itemId.isEmpty()) {
-                    ResourceLocation itemIdentifier = new ResourceLocation(itemId);
-                    if (!BuiltInRegistries.ITEM.containsKey(itemIdentifier))
-                        throw new Exception("Unknown item " + itemId);
-                    this.items.add(BuiltInRegistries.ITEM.get(itemIdentifier));
+                    try {
+                        ResourceLocation itemIdentifier = new ResourceLocation(itemId);
+                        if (BuiltInRegistries.ITEM.containsKey(itemIdentifier))
+                            this.items.add(BuiltInRegistries.ITEM.get(itemIdentifier));
+                        else
+                            CITResewn.logWarnLoading("CIT Warning: Unknown item " + itemId + " in " + pack.resourcePack.packId() + " -> " + identifier);
+                    } catch (Exception e) {
+                        CITResewn.logWarnLoading("CIT Warning: Invalid item id " + itemId + " in " + pack.resourcePack.packId() + " -> " + identifier + ": " + e.getMessage());
+                    }
                 }
             if (this.items.isEmpty())
                 try {
@@ -124,7 +129,9 @@ public abstract class CIT {
 
             String enchantmentIDs = properties.getProperty("enchantments", properties.getProperty("enchantmentIDs"));
             if (!(this.enchantmentsAny = enchantmentIDs == null)) {
-                for (String ench : enchantmentIDs.split(" ")) {
+                for (String ench : enchantmentIDs.trim().split("\\s+")) {
+                    if (ench.isEmpty())
+                        continue;
                     ResourceLocation enchIdentifier = new ResourceLocation(ench);
                     if (!BuiltInRegistries.ENCHANTMENT.containsKey(enchIdentifier))
                         CITResewn.logWarnLoading("CIT Warning: Unknown enchantment " + enchIdentifier);
@@ -134,7 +141,9 @@ public abstract class CIT {
 
             String enchantmentLevelsProp = properties.getProperty("enchantmentLevels");
             if (!(this.enchantmentLevelsAny = enchantmentLevelsProp == null)) {
-                for (String range : enchantmentLevelsProp.split(" ")) {
+                for (String range : enchantmentLevelsProp.trim().split("\\s+")) {
+                    if (range.isEmpty())
+                        continue;
                     if (range.contains("-")) {
                         if (range.startsWith("-")) {
                             range = range.substring(1);
